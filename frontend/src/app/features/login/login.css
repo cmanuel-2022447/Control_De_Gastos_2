@@ -1,0 +1,35 @@
+:host { display: block; min-height: 100vh; }
+* { box-sizing: border-box; }
+.login-container { min-height: 100vh; display: grid; place-items: center; padding: 32px 20px; background: #0b2545; position: relative; overflow: hidden; }
+.login-container::before, .login-container::after { content: ''; position: absolute; border-radius: 50%; filter: blur(1px); opacity: .8; }
+.login-container::before { width: 520px; height: 520px; background: #134074; top: -270px; right: -150px; }
+.login-container::after { width: 360px; height: 360px; background: #1d5f9e; bottom: -220px; left: -130px; }
+.login-box { position: relative; z-index: 1; width: min(100%, 580px); overflow: hidden; border: 1px solid rgba(255,255,255,.18); border-radius: 28px; background: #fff; box-shadow: 0 28px 80px rgba(0,0,0,.3); animation: rise .65s ease both; }
+.login-header { padding: 30px 34px 26px; color: #fff; background: #134074; position: relative; }
+.login-header::after { content: ''; position: absolute; width: 130px; height: 130px; right: -30px; bottom: -62px; border: 24px solid #1d5f9e; border-radius: 50%; opacity: .8; }
+.brand-lockup { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.logo-frame { width: 90px; height: 90px; display: grid; place-items: center; overflow: hidden; background: transparent; }
+.logo-frame img { display: block; width: 100%; height: 100%; object-fit: contain; transform: scale(2.2); }
+.brand-kicker { color: #dbe7f4; font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; }
+.login-header h1 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.4rem, 8vw, 3.8rem); line-height: .92; letter-spacing: -.04em; }
+.login-header h1 em { color: #fff; font-style: normal; }
+.login-subtitle { margin-top: 16px; color: #cbd5e1; font-size: .92rem; }
+.form-panel { padding: 28px 34px 30px; }
+.form-panel h2 { margin: 0 0 20px; color: #134074; font-family: Georgia, 'Times New Roman', serif; font-size: 1.35rem; }
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; margin-bottom: 8px; color: #134074; font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.form-group input { width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc; padding: 14px 15px; color: #111827; font: inherit; outline: none; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.form-group input:focus { border-color: #134074; box-shadow: 0 0 0 4px rgba(19,64,116,.15); transform: translateY(-1px); }
+.password-group { position: relative; }
+.password-group input { padding-right: 84px; }
+.password-toggle { position: absolute; right: 8px; bottom: 8px; border: 0; border-radius: 8px; padding: 7px 9px; color: #134074; background: #e2e8f0; cursor: pointer; font-size: .73rem; font-weight: 800; }
+.btn-login { width: 100%; display: flex; align-items: center; justify-content: space-between; border: 0; border-radius: 12px; padding: 15px 17px; color: #fff; background: #0b2545; cursor: pointer; font: inherit; font-weight: 800; transition: transform .2s, box-shadow .2s, background .2s; }
+.btn-login:hover:not(:disabled) { background: #134074; box-shadow: 0 10px 22px rgba(11,37,69,.25); transform: translateY(-2px); }
+.btn-login:disabled { cursor: wait; opacity: .65; }
+.button-arrow { font-size: 1.35rem; }
+.error-message { margin-top: 16px; border-left: 4px solid #991b1b; border-radius: 8px; padding: 11px 12px; color: #7f1d1d; background: #fee2e2; font-size: .86rem; }
+.register-prompt { margin: 18px 0 0; color: #475569; text-align: center; font-size: .86rem; }
+.account-link { display: inline-block; margin-left: 4px; border-radius: 8px; padding: 7px 11px; color: #fff; background: #134074; font-weight: 800; text-decoration: none; transition: background .2s, transform .2s; }
+.account-link:hover { background: #0b2545; transform: translateY(-1px); }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 520px) { .login-header, .form-panel { padding-left: 24px; padding-right: 24px; } }
