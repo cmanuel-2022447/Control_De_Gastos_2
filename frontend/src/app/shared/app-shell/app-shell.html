@@ -1,0 +1,58 @@
+<div class="app-shell" [class.dark-mode]="modoOscuro" [class.dashboard-shell]="activePage === 'dashboard'">
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-brand"><div class="sidebar-logo"><img src="assets/img/Logo.png" alt="Logo de la empresa" /></div><strong>Control<br />de gastos</strong></div>
+      <span class="workspace-label">ESPACIO PERSONAL</span>
+      <nav class="nav-menu">
+        <a class="nav-item" routerLink="/dashboard" [class.active]="activePage === 'dashboard'"><img class="nav-item-icon" src="assets/img/Dashboard.png" alt="" /><span>Dashboard</span> <i *ngIf="activePage === 'dashboard'"></i></a>
+        <a class="nav-item" routerLink="/ingresos" [class.active]="activePage === 'ingresos'"><img class="nav-item-icon" src="assets/img/Ingresos.png" alt="" /><span>Ingresos</span> <i *ngIf="activePage === 'ingresos'"></i></a>
+        <a class="nav-item" routerLink="/gastos" [class.active]="activePage === 'gastos'"><img class="nav-item-icon" src="assets/img/Gastos.png" alt="" /><span>Gastos</span> <i *ngIf="activePage === 'gastos'"></i></a>
+        <a class="nav-item" routerLink="/planificar-evento" [class.active]="activePage === 'planificar-evento'"><img class="nav-item-icon" src="assets/img/Planificar%20Evento.png" alt="" /><span>Planificar evento</span> <i *ngIf="activePage === 'planificar-evento'"></i></a>
+        <hr />
+        <a class="nav-item" routerLink="/perfil" [class.active]="activePage === 'perfil'"><img class="nav-item-icon" src="assets/img/Perfil.png" alt="" /><span>Perfil</span> <i *ngIf="activePage === 'perfil'"></i></a>
+        <div class="settings-menu"><button class="nav-item" type="button" [class.active]="configuracionesAbiertas" (click)="alternarConfiguraciones()"><img class="nav-item-icon" src="assets/img/Configuraciones.png" alt="" /><span>Configuraciones</span></button>
+          <div *ngIf="configuracionesAbiertas" class="settings-popover">
+            <div class="settings-heading"><strong>Apariencia</strong><button type="button" (click)="alternarConfiguraciones()" aria-label="Cerrar configuraciones">×</button></div>
+            <p>Elige el modo de la aplicación</p>
+            <div class="theme-options"><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)"><img src="assets/img/Claro.png" alt="" /> Claro</button><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)"><img src="assets/img/Oscuro.png" alt="" /> Oscuro</button></div>
+          </div>
+        </div>
+        <hr />
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <a class="nav-item help-link" routerLink="/ayuda" [class.active]="activePage === 'ayuda'"><img class="nav-item-icon" src="assets/img/Ayuda.png" alt="" /><span>Ayuda</span> <i *ngIf="activePage === 'ayuda'"></i></a>
+      <button class="logout-button" type="button" (click)="logout()"><img class="nav-item-icon" src="assets/img/Salir.png" alt="" /><span>Cerrar sesión</span></button>
+    </div>
+  </aside>
+  <main class="main-panel">
+    <header class="top-white-container">
+      <div>
+        <h2><span class="welcome-word">Bienvenido</span>, <span>{{ etiquetaRol }}</span></h2>
+        <p class="subtitle">Gestiona tus gastos con más claridad y menos ruido.</p>
+      </div>
+      <div class="header-actions">
+        <div class="quick-search">
+          <label for="page-search">Buscar</label>
+          <input id="page-search" type="search" [(ngModel)]="busqueda" placeholder="Buscar en esta página" />
+          <img class="search-icon" src="assets/img/Lupa.png" alt="" aria-hidden="true" />
+          <div *ngIf="busqueda" class="search-results">
+            <p *ngIf="!resultadosBusqueda.length">Sin coincidencias en esta página</p>
+            <button *ngFor="let resultado of resultadosBusqueda" type="button" (click)="irAResultado(resultado)">
+              <span [innerHTML]="resultado.texto.replace(busquedaResaltada, '<mark>' + busquedaResaltada + '</mark>')"></span>
+            </button>
+          </div>
+        </div>
+        <div class="profile-menu">
+          <button class="profile-chip" type="button" (click)="alternarPerfil()"><img class="profile-avatar" src="assets/img/Hombre.png" alt="" /><span class="profile-label"><strong>{{ datosPerfil.usuario }}</strong><small>{{ datosPerfil.rol }}</small></span><span class="profile-chevron">⌄</span></button>
+          <div *ngIf="perfilAbierto" class="profile-popover">
+            <div class="profile-summary"><img class="profile-avatar large" src="assets/img/Hombre.png" alt="" /><div><strong>{{ datosPerfil.nombre }} {{ datosPerfil.apellido }}</strong><small>{{ datosPerfil.rol }}</small></div></div>
+            <dl><div><dt>Usuario</dt><dd>{{ datosPerfil.usuario }}</dd></div><div><dt>Correo</dt><dd>{{ datosPerfil.correo }}</dd></div><div><dt>Género</dt><dd>{{ datosPerfil.genero }}</dd></div></dl>
+            <a routerLink="/perfil" (click)="alternarPerfil()">Ingresar a mi perfil <span>↗</span></a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <section class="page-content"><ng-content></ng-content></section>
+  </main>
+</div>

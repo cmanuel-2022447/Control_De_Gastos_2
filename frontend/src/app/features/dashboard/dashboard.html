@@ -1,0 +1,87 @@
+<div class="dashboard-container" [class.dark-mode]="modoOscuro">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">
+            <img src="assets/logo.png" alt="Logo de la empresa" />
+          </div>
+          <strong>Control<br />de gastos</strong>
+        </div>
+        <span class="workspace-label">ESPACIO PERSONAL</span>
+      </div>
+      <nav class="nav-menu">
+        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="nav-icon">⌂</span> Inicio <span class="nav-dot"></span></a>
+        <a class="nav-item" routerLink="/ingresos" routerLinkActive="active"><span class="nav-icon">▤</span> Ingresos</a>
+        <a class="nav-item" routerLink="/gastos" routerLinkActive="active"><span class="nav-icon">▣</span> Gastos</a>
+        <a class="nav-item" routerLink="/planificar-evento" routerLinkActive="active"><span class="nav-icon">▤</span> Planificar evento</a>
+        <hr />
+        <a class="nav-item" routerLink="/perfil" routerLinkActive="active"><span class="nav-icon">♟</span> Perfil</a>
+        <div class="settings-menu"><button class="nav-item" type="button" (click)="alternarConfiguraciones()"><span class="nav-icon">⚙</span> Configuraciones</button>
+          <div *ngIf="configuracionesAbiertas" class="settings-popover">
+            <div class="settings-heading"><strong>Apariencia</strong><button type="button" (click)="alternarConfiguraciones()" aria-label="Cerrar configuraciones">×</button></div>
+            <p>Elige el modo de la aplicación</p>
+            <div class="theme-options"><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)">☀ Claro</button><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)">◐ Oscuro</button></div>
+          </div>
+        </div>
+        <hr />
+        <a class="nav-item" routerLink="/ayuda" routerLinkActive="active"><span class="nav-icon">◉</span> Ayuda</a>
+      </nav>
+    </div>
+    <button class="logout-button" type="button" (click)="logout()"><span>↪</span> Cerrar sesión</button>
+  </aside>
+
+  <main class="main-panel">
+    <header class="top-white-container">
+      <div>
+        <h2>Hola, <span>bienvenido</span></h2>
+        <p class="subtitle">Gestiona tus gastos con más claridad y menos ruido.</p>
+      </div>
+      <div class="header-actions">
+        <div class="quick-search">
+          <label for="dashboard-search">Buscar</label>
+          <input id="dashboard-search" type="search" [(ngModel)]="busqueda" placeholder="Buscar en esta página" />
+          <img class="search-icon" src="assets/img/Lupa.png" alt="" aria-hidden="true" />
+          <div *ngIf="busqueda" class="search-results">
+            <p *ngIf="!resultadosBusqueda.length">Sin coincidencias en esta página</p>
+            <button *ngFor="let resultado of resultadosBusqueda" type="button">{{ resultado }}</button>
+          </div>
+        </div>
+        <div class="profile-menu">
+          <button class="profile-chip" type="button" (click)="alternarPerfil()"><img class="profile-avatar" src="assets/img/Hombre.png" alt="" /><span class="profile-label"><strong>{{ datosPerfil.usuario }}</strong><small>{{ datosPerfil.rol }}</small></span><span class="profile-chevron">⌄</span></button>
+          <div *ngIf="perfilAbierto" class="profile-popover">
+            <div class="profile-summary"><img class="profile-avatar large" src="assets/img/Hombre.png" alt="" /><div><strong>{{ datosPerfil.nombre }} {{ datosPerfil.apellido }}</strong><small>{{ datosPerfil.rol }}</small></div></div>
+            <dl><div><dt>Usuario</dt><dd>{{ datosPerfil.usuario }}</dd></div><div><dt>Correo</dt><dd>{{ datosPerfil.correo }}</dd></div><div><dt>Género</dt><dd>{{ datosPerfil.genero }}</dd></div></dl>
+            <a routerLink="/perfil" (click)="alternarPerfil()">Ingresar a mi perfil <span>↗</span></a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="content financial-content">
+      <div class="financial-grid">
+        <section class="summary-card">
+          <p class="eyebrow">RESUMEN DE HOY</p>
+          <article class="balance-card">
+            <div><span class="stat-label">DINERO RESTANTE</span><strong>Q {{ dineroRestante | number:'1.2-2' }}</strong></div>
+            <img src="assets/img/Dinero.png" alt="Dinero restante" />
+          </article>
+          <div class="summary-actions">
+            <button type="button" class="summary-action expense-action" (click)="irAGastos()"><img src="assets/img/Cartera.png" alt="" /> Gastos</button>
+            <button type="button" class="summary-action income-action" (click)="irAIngresos()"><img src="assets/img/Conchinito.png" alt="" /> Ingresos</button>
+          </div>
+        </section>
+
+        <section class="extras-card">
+          <div class="extras-heading"><h3>Extras</h3><div class="theme-switch"><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)"><img src="assets/img/Oscuro.png" alt="" /> Oscuro</button><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)"><img src="assets/img/Claro.png" alt="" /> Claro</button></div></div>
+          <div class="extra-cards">
+            <article class="extra-card spent-card"><span>Dinero gastado</span><strong>Q {{ dineroGastado | number:'1.2-2' }}</strong><img src="assets/img/Cartera.png" alt="" /></article>
+            <article class="extra-card debt-card"><span>Total de deuda<br />a pagar</span><strong>Q {{ deudaPorPagar | number:'1.2-2' }}</strong><img src="assets/img/Conchinito.png" alt="" /></article>
+            <article class="extra-card event-card"><span>Presupuesto para<br />el evento</span><strong>Q {{ presupuestoEvento | number:'1.2-2' }}</strong><small>Boda</small><img src="assets/img/Globos.png" alt="" /></article>
+          </div>
+          <div class="chart" aria-label="Resumen visual del presupuesto"><span style="height: 42%"></span><span style="height: 82%"></span><span style="height: 62%"></span></div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
