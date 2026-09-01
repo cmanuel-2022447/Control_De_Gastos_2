@@ -3,51 +3,73 @@ import { pool } from '../../../config/db';
 import { generateToken } from '../../../util/jwt';
 
 export class AuthService {
-    static async login(loginValue: string, password: string): Promise<{ token: string; rol: string }> {
-        const result = await pool.query(
-            'SELECT id, usuario, correo, password_hash, rol FROM public.usuarios WHERE correo = $1 OR usuario = $1 LIMIT 1',
-            [loginValue]
-        );
-        const user = result.rows[0];
+    static async login(loginValue: string, passwordInput: string): Promise<{ token: string; rol: string }> {
+        const cleanLogin = loginValue?.trim();
+        const cleanPassword = passwordInput?.trim();
 
-        if (!user || !(await bcryptjs.compare(password, user.password_hash))) {
+        if (!cleanLogin || !cleanPassword) {
             throw new Error('INVALID_CREDENTIALS');
         }
 
+        const result = await pool.query(
+            `SELECT id, usuario, correo, password, rol 
+             FROM public.usuarios 
+             WHERE LOWER(correo) = LOWER($1) OR LOWER(usuario) = LOWER($1) 
+             LIMIT 1`,
+            [cleanLogin]
+        );
+
+        const user = result.rows[0];
+
+        if (!user) {
+            throw new Error('INVALID_CREDENTIALS');
+        }
+
+        const passwordMatch = await bcryptjs.compare(cleanPassword, user.password);
+
+        if (!passwordMatch) {
+            throw new Error('INVALID_CREDENTIALS');
+        }
+
+        const token = generateToken({
+            id: user.id,
+            usuario: user.usuario,
+            email: user.correo,
+            rol: user.rol
+        });
+
         return {
-            token: generateToken({ id: user.id, usuario: user.usuario, email: user.correo, rol: user.rol }),
+            token,
             rol: user.rol
         };
     }
 
-    static async register(
-        nombre: string,
-        apellido: string,
-        usuario: string,
-        correo: string,
-        password: string,
-        genero: string
-    ): Promise<{ id: number; nombre: string; apellido: string; usuario: string; correo: string; genero: string }> {
-        // Verificar si el usuario ya existe
+    static async register(userData: { usuario: string; correo: string; password: string; rol?: string }): Promise<{ message: string }> {
+        const usuario = userData?.usuario?.trim();
+        const correo = userData?.correo?.trim();
+        const password = userData?.password?.trim();
+        const rol = userData?.rol?.trim() || 'USUARIO';
+
+        if (!usuario || !correo || !password) {
+            throw new Error('INVALID_REGISTER_DATA');
+        }
+
         const existingUser = await pool.query(
-            'SELECT id FROM public.usuarios WHERE usuario = $1 OR correo = $2 LIMIT 1',
+            `SELECT id FROM public.usuarios WHERE LOWER(usuario) = LOWER($1) OR LOWER(correo) = LOWER($2) LIMIT 1`,
             [usuario, correo]
         );
 
         if (existingUser.rows.length > 0) {
-            throw new Error('USER_EXISTS');
+            throw new Error('USER_ALREADY_EXISTS');
         }
 
-        const saltRounds = 10;
-        const password_hash = await bcryptjs.hash(password, saltRounds);
+        const passwordHash = await bcryptjs.hash(password, 10);
 
-        const result = await pool.query(
-            `INSERT INTO public.usuarios (nombre, apellido, usuario, correo, genero, password_hash, rol)
-             VALUES ($1, $2, $3, $4, $5, $6, 'USUARIO')
-             RETURNING id, nombre, apellido, usuario, correo, genero`,
-            [nombre, apellido, usuario, correo, genero, password_hash]
+        await pool.query(
+            `INSERT INTO public.usuarios (usuario, correo, password, rol) VALUES ($1, $2, $3, $4)`,
+            [usuario, correo, passwordHash, rol]
         );
 
-        return result.rows[0];
+        return { message: 'Usuario registrado correctamente' };
     }
 }
