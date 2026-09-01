@@ -29,20 +29,14 @@ export class RegisterComponent {
       this.errorMessage = 'Todos los campos son obligatorios';
       return;
     }
+
     if (this.password !== this.confirmPassword) {
       this.errorMessage = 'Las contraseñas no coinciden';
       return;
     }
 
     this.errorMessage = '';
-    localStorage.setItem('perfilRegistro', JSON.stringify({
-      nombre: this.nombre,
-      apellido: this.apellido,
-      usuario: this.usuario,
-      correo: this.email,
-      genero: this.genero
-    }));
-    this.successMessage = 'Estructura lista. El registro se conectará a la base de datos próximamente.';
+    this.successMessage = 'Vista de registro lista. Aquí no se guarda información en la base de datos.';
   }
 
   alternarPassword(): void {

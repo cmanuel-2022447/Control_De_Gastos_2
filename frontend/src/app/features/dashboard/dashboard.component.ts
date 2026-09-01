@@ -1,88 +1,190 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
+import { RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AppShellComponent } from '../../shared/app-shell/app-shell.component';
+import { IngresosService } from '../../core/services/ingresos.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
-  templateUrl: './dashboard.html',
+  imports: [CommonModule, RouterLink, AppShellComponent],
+  template: `
+    <app-shell #shell activePage="dashboard" [searchableContent]="dashboardSearchTerms">
+      <section class="content financial-content" [class.dark-mode]="shell.modoOscuro" id="dashboard-section">
+        <div class="financial-grid">
+          <section class="summary-card" id="resumen-hoy">
+            <p class="eyebrow">RESUMEN DE HOY</p>
+            <article class="balance-card">
+              <div>
+                <span class="stat-label">DINERO RESTANTE</span>
+                <strong>Q {{ dineroRestante | number:'1.2-2' }}</strong>
+              </div>
+              <img src="assets/img/Dinero.png" alt="Dinero restante" />
+            </article>
+            <div class="income-chart-block">
+              <div class="income-chart" [style.background]="graficaIngresos" role="img" aria-label="Gráfica circular de ingresos y gastos">
+                <div class="income-chart-center"><strong>Q {{ totalIngresos | number:'1.2-2' }}</strong><span>Ingresos</span></div>
+              </div>
+              <div class="chart-legend">
+                <span><i class="legend-income"></i>Ingresos</span>
+                <span><i class="legend-expense"></i>Gastos</span>
+              </div>
+            </div>
+            <div class="summary-actions">
+              <button type="button" class="summary-action expense-action" routerLink="/gastos">
+                <img src="assets/img/Cartera.png" alt="" /> Gastos
+              </button>
+              <button type="button" class="summary-action income-action" routerLink="/ingresos">
+                <img src="assets/img/Conchinito.png" alt="" /> Ingresos
+              </button>
+            </div>
+          </section>
+
+          <section class="extras-card" id="extras-section">
+            <div class="extras-heading">
+              <h3>EXTRAS</h3>
+              <div class="theme-switch">
+                <button type="button" [class.selected]="shell.modoOscuro" (click)="shell.cambiarTema(true)"><img src="assets/img/Oscuro.png" alt="" /> Oscuro</button>
+                <button type="button" [class.selected]="!shell.modoOscuro" (click)="shell.cambiarTema(false)"><img src="assets/img/Claro.png" alt="" /> Claro</button>
+              </div>
+            </div>
+            <div class="extra-cards">
+              <article class="extra-card spent-card">
+                <span>Dinero gastado</span>
+                <strong>Q {{ dineroGastado | number:'1.2-2' }}</strong>
+                <img src="assets/img/Cartera.png" alt="" />
+              </article>
+              <article class="extra-card debt-card">
+                <span>Total de deuda<br />a pagar</span>
+                <strong>Q {{ deudaPorPagar | number:'1.2-2' }}</strong>
+                <img src="assets/img/Conchinito.png" alt="" />
+              </article>
+              <article class="extra-card event-card">
+                <span>Presupuesto para<br />el evento</span>
+                <strong>Q {{ presupuestoEvento | number:'1.2-2' }}</strong>
+                <small>Boda</small>
+                <img src="assets/img/Globos.png" alt="" />
+              </article>
+            </div>
+            <div class="chart" aria-label="Presupuesto por periodo">
+              <div class="bar-item" *ngFor="let barra of barrasPresupuesto">
+                <span class="bar" [style.height.%]="barra.porcentaje" [title]="barra.etiqueta + ': Q ' + barra.monto"></span>
+                <small>{{ barra.etiqueta }}</small>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </app-shell>
+  `,
   styleUrl: './dashboard.css'
 })
-export class DashboardComponent {
-  configuracionesAbiertas = false;
-  perfilAbierto = false;
-  modoOscuro = false;
-  busqueda = '';
-  dineroRestante = 5254.50;
-  dineroGastado = 2254.50;
-  deudaPorPagar = 0;
-  presupuestoEvento = 800.00;
+export class DashboardComponent implements OnInit, OnDestroy {
+  readonly tasaCambio = 7.68;
 
-  private readonly informacionDashboard = [
-    'Resumen de hoy',
-    'Tu dinero en perspectiva',
-    'Gastos del mes',
-    'Movimientos',
-    'Todo bajo control',
-    'Empieza a registrar',
-    'Añadir gasto'
-    , 'Dinero restante', 'Dinero gastado', 'Gastos', 'Ingresos', 'Deuda por pagar', 'Presupuesto para el evento'
+  get dashboardSearchTerms(): Array<{ texto: string; selector: string; ruta: string }> {
+    return [
+      { texto: 'Dashboard', selector: '#dashboard-section', ruta: '/dashboard' },
+      { texto: 'Resumen de hoy', selector: '#resumen-hoy', ruta: '/dashboard' },
+      { texto: `Dinero restante Q ${this.dineroRestante.toFixed(2)}`, selector: '#resumen-hoy', ruta: '/dashboard' },
+      { texto: `Ingresos Q ${this.totalIngresos.toFixed(2)}`, selector: '#resumen-hoy', ruta: '/dashboard' },
+      { texto: `Gastos Q ${this.totalGastos.toFixed(2)}`, selector: '#resumen-hoy', ruta: '/dashboard' },
+      { texto: `Dinero gastado Q ${this.dineroGastado.toFixed(2)}`, selector: '#extras-section', ruta: '/dashboard' },
+      { texto: `Deuda por pagar Q ${this.deudaPorPagar.toFixed(2)}`, selector: '#extras-section', ruta: '/dashboard' },
+      { texto: `Presupuesto para el evento Q ${this.presupuestoEvento.toFixed(2)}`, selector: '#extras-section', ruta: '/dashboard' },
+      { texto: 'Extras', selector: '#extras-section', ruta: '/dashboard' },
+      { texto: `Ingresos ${this.porcentajeIngresos}%`, selector: '#resumen-hoy', ruta: '/dashboard' }
+    ];
+  }
+
+  totalIngresos = 0;
+  totalGastos = 0;
+  dineroRestante = 0;
+  dineroGastado = 0;
+  deudaPorPagar = 0;
+  presupuestoEvento = 0;
+  porcentajeIngresos = 0;
+  graficaIngresos = 'conic-gradient(#194c84 0 0%, #9fd7e8 0% 100%)';
+  barrasPresupuesto = [
+    { etiqueta: 'Ene', monto: '0.00', porcentaje: 0 },
+    { etiqueta: 'Feb', monto: '0.00', porcentaje: 0 },
+    { etiqueta: 'Mar', monto: '0.00', porcentaje: 0 }
   ];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
-    private authService: AuthService,
-    private router: Router
+    private ingresosService: IngresosService,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  alternarConfiguraciones(): void {
-    this.configuracionesAbiertas = !this.configuracionesAbiertas;
+  ngOnInit(): void {
+    // Suscribirse a los cambios de ingresos desde el servicio compartido
+    this.ingresosService.ingresos$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((ingresos) => {
+        this.totalIngresos = this.calcularTotalIngresos(ingresos);
+        this.totalGastos = 0;
+        this.dineroGastado = this.totalGastos;
+        this.deudaPorPagar = 0;
+        this.presupuestoEvento = 0;
+        this.dineroRestante = this.totalIngresos - this.totalGastos;
+        this.actualizarGrafica();
+        this.actualizarBarras();
+        // Fuerza detección de cambios porque usamos provideZonelessChangeDetection()
+        this.cdr.markForCheck();
+      });
   }
 
-  cambiarTema(modoOscuro: boolean): void {
-    this.modoOscuro = modoOscuro;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  irAGastos(): void {
-    this.router.navigate(['/gastos']);
+  private calcularTotalIngresos(ingresos: any[]): number {
+    if (!ingresos?.length) return 0;
+
+    return ingresos.reduce((total, ingreso) => {
+      const monto = ingreso.monto || 0;
+      const moneda = ingreso.moneda || 'GTQ';
+
+      if (moneda === 'USD') {
+        return total + (Number(monto || 0) * this.tasaCambio);
+      }
+
+      return total + Number(monto || 0);
+    }, 0);
   }
 
-  irAIngresos(): void {
-    this.router.navigate(['/ingresos']);
+  private actualizarGrafica(): void {
+    const totalBase = this.totalIngresos + this.totalGastos;
+    this.porcentajeIngresos = totalBase > 0 ? Math.round((this.totalIngresos / totalBase) * 100) : 0;
+    this.graficaIngresos = `conic-gradient(#194c84 0 ${this.porcentajeIngresos}%, #9fd7e8 ${this.porcentajeIngresos}% 100%)`;
   }
 
-  alternarPerfil(): void {
-    this.perfilAbierto = !this.perfilAbierto;
+  private actualizarBarras(): void {
+    this.barrasPresupuesto = [
+      { etiqueta: 'Ene', monto: '0.00', porcentaje: this.totalIngresos > 0 ? 0 : 0 },
+      { etiqueta: 'Feb', monto: '0.00', porcentaje: 0 },
+      { etiqueta: 'Mar', monto: '0.00', porcentaje: 0 }
+    ];
   }
 
-  get datosPerfil(): { nombre: string; apellido: string; usuario: string; correo: string; genero: string; rol: string } {
-    const token = this.authService.getUserPayload() || {};
-    let registro: Partial<{ nombre: string; apellido: string; usuario: string; correo: string; genero: string }> = {};
-    try {
-      registro = JSON.parse(localStorage.getItem('perfilRegistro') || '{}');
-    } catch {
-      registro = {};
-    }
-    return {
-      nombre: registro.nombre || 'Usuario',
-      apellido: registro.apellido || '',
-      usuario: token.usuario || registro.usuario || 'Sin usuario',
-      correo: registro.correo || token.email || 'Sin correo',
-      genero: registro.genero || 'No especificado',
-      rol: token.rol || localStorage.getItem('rol') || 'USUARIO'
-    };
-  }
-
-  get resultadosBusqueda(): string[] {
-    const consulta = this.busqueda.trim().toLowerCase();
-    if (!consulta) return [];
-    return this.informacionDashboard.filter(texto => texto.toLowerCase().includes(consulta));
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/']);
+  private resetearTotales(): void {
+    this.totalIngresos = 0;
+    this.totalGastos = 0;
+    this.dineroRestante = 0;
+    this.dineroGastado = 0;
+    this.deudaPorPagar = 0;
+    this.presupuestoEvento = 0;
+    this.porcentajeIngresos = 0;
+    this.graficaIngresos = 'conic-gradient(#194c84 0 0%, #9fd7e8 0% 100%)';
+    this.barrasPresupuesto = [
+      { etiqueta: 'Ene', monto: '0.00', porcentaje: 0 },
+      { etiqueta: 'Feb', monto: '0.00', porcentaje: 0 },
+      { etiqueta: 'Mar', monto: '0.00', porcentaje: 0 }
+    ];
   }
 }
