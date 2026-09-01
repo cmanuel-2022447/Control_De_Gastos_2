@@ -4,8 +4,9 @@
   "description": "Backend básico para control de gastos",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "npx kill-port 3000 && ts-node-dev server.ts",
+    "dev": "npx kill-port 3000 && cross-env DOTENV_QUIET=true ts-node-dev --respawn --exit-child server.ts",
     "build": "tsc",
+    "db:seed": "ts-node src/database/seed.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.11.24",
     "@types/pg": "^8.23.1",
+    "cross-env": "^10.1.0",
     "kill-port": "^2.0.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"

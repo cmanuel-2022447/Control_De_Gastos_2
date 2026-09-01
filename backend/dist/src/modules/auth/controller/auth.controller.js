@@ -15,8 +15,12 @@ class AuthController {
     static login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { login, password } = req.body;
-                const result = yield auth_service_1.AuthService.login(login, password);
+                const { login, usuario, correo, email, identifier, username, password } = req.body;
+                const loginValue = login || usuario || correo || email || identifier || username;
+                if (!loginValue || !password) {
+                    return res.status(400).json({ message: "Faltan datos en la solicitud (usuario o contraseña vacíos)" });
+                }
+                const result = yield auth_service_1.AuthService.login(loginValue, password);
                 return res.status(200).json({ message: "Inicio de sesión exitoso", token: result.token, rol: result.rol });
             }
             catch (error) {
@@ -30,19 +34,28 @@ class AuthController {
     static register(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { nombre, apellido, usuario, correo, email, password, genero } = req.body;
-                const correoUsuario = correo || email;
-                if (!nombre || !apellido || !usuario || !correoUsuario || !password || !genero) {
-                    return res.status(400).json({ message: "Todos los campos son obligatorios" });
+                const { usuario, correo, email, password, rol } = req.body;
+                const cleanUsuario = usuario || req.body.username || req.body.user;
+                const cleanCorreo = correo || email;
+                if (!cleanUsuario || !cleanCorreo || !password) {
+                    return res.status(400).json({ message: "Faltan datos para registrar el usuario" });
                 }
-                const newUser = yield auth_service_1.AuthService.register(nombre, apellido, usuario, correoUsuario, password, genero);
-                return res.status(201).json({ message: "Usuario registrado con éxito", user: newUser });
+                const result = yield auth_service_1.AuthService.register({
+                    usuario: cleanUsuario,
+                    correo: cleanCorreo,
+                    password,
+                    rol
+                });
+                return res.status(201).json({ message: result.message });
             }
             catch (error) {
-                if (error instanceof Error && error.message === 'USER_EXISTS') {
-                    return res.status(409).json({ message: "El usuario o correo electrónico ya están registrados" });
+                if (error instanceof Error && error.message === 'INVALID_REGISTER_DATA') {
+                    return res.status(400).json({ message: "Faltan datos para registrar el usuario" });
                 }
-                return res.status(500).json({ message: "Error interno al registrar usuario" });
+                if (error instanceof Error && error.message === 'USER_ALREADY_EXISTS') {
+                    return res.status(409).json({ message: "El usuario o correo ya existe" });
+                }
+                return res.status(503).json({ message: "La base de datos no está disponible" });
             }
         });
     }

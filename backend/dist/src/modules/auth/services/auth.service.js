@@ -17,32 +17,54 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const db_1 = require("../../../config/db");
 const jwt_1 = require("../../../util/jwt");
 class AuthService {
-    static login(loginValue, password) {
+    static login(loginValue, passwordInput) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.pool.query('SELECT id, usuario, correo, password_hash, rol FROM public.usuarios WHERE correo = $1 OR usuario = $1 LIMIT 1', [loginValue]);
-            const user = result.rows[0];
-            if (!user || !(yield bcryptjs_1.default.compare(password, user.password_hash))) {
+            const cleanLogin = loginValue === null || loginValue === void 0 ? void 0 : loginValue.trim();
+            const cleanPassword = passwordInput === null || passwordInput === void 0 ? void 0 : passwordInput.trim();
+            if (!cleanLogin || !cleanPassword) {
                 throw new Error('INVALID_CREDENTIALS');
             }
+            const result = yield db_1.pool.query(`SELECT id, usuario, correo, password, rol 
+             FROM public.usuarios 
+             WHERE LOWER(correo) = LOWER($1) OR LOWER(usuario) = LOWER($1) 
+             LIMIT 1`, [cleanLogin]);
+            const user = result.rows[0];
+            if (!user) {
+                throw new Error('INVALID_CREDENTIALS');
+            }
+            const passwordMatch = yield bcryptjs_1.default.compare(cleanPassword, user.password);
+            if (!passwordMatch) {
+                throw new Error('INVALID_CREDENTIALS');
+            }
+            const token = (0, jwt_1.generateToken)({
+                id: user.id,
+                usuario: user.usuario,
+                email: user.correo,
+                rol: user.rol
+            });
             return {
-                token: (0, jwt_1.generateToken)({ id: user.id, usuario: user.usuario, email: user.correo, rol: user.rol }),
+                token,
                 rol: user.rol
             };
         });
     }
-    static register(nombre, apellido, usuario, correo, password, genero) {
+    static register(userData) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Verificar si el usuario ya existe
-            const existingUser = yield db_1.pool.query('SELECT id FROM public.usuarios WHERE usuario = $1 OR correo = $2 LIMIT 1', [usuario, correo]);
-            if (existingUser.rows.length > 0) {
-                throw new Error('USER_EXISTS');
+            var _a, _b, _c, _d;
+            const usuario = (_a = userData === null || userData === void 0 ? void 0 : userData.usuario) === null || _a === void 0 ? void 0 : _a.trim();
+            const correo = (_b = userData === null || userData === void 0 ? void 0 : userData.correo) === null || _b === void 0 ? void 0 : _b.trim();
+            const password = (_c = userData === null || userData === void 0 ? void 0 : userData.password) === null || _c === void 0 ? void 0 : _c.trim();
+            const rol = ((_d = userData === null || userData === void 0 ? void 0 : userData.rol) === null || _d === void 0 ? void 0 : _d.trim()) || 'USUARIO';
+            if (!usuario || !correo || !password) {
+                throw new Error('INVALID_REGISTER_DATA');
             }
-            const saltRounds = 10;
-            const password_hash = yield bcryptjs_1.default.hash(password, saltRounds);
-            const result = yield db_1.pool.query(`INSERT INTO public.usuarios (nombre, apellido, usuario, correo, genero, password_hash, rol)
-             VALUES ($1, $2, $3, $4, $5, $6, 'USUARIO')
-             RETURNING id, nombre, apellido, usuario, correo, genero`, [nombre, apellido, usuario, correo, genero, password_hash]);
-            return result.rows[0];
+            const existingUser = yield db_1.pool.query(`SELECT id FROM public.usuarios WHERE LOWER(usuario) = LOWER($1) OR LOWER(correo) = LOWER($2) LIMIT 1`, [usuario, correo]);
+            if (existingUser.rows.length > 0) {
+                throw new Error('USER_ALREADY_EXISTS');
+            }
+            const passwordHash = yield bcryptjs_1.default.hash(password, 10);
+            yield db_1.pool.query(`INSERT INTO public.usuarios (usuario, correo, password, rol) VALUES ($1, $2, $3, $4)`, [usuario, correo, passwordHash, rol]);
+            return { message: 'Usuario registrado correctamente' };
         });
     }
 }

@@ -10,6 +10,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const auth_routes_1 = __importDefault(require("./src/modules/auth/routes/auth.routes"));
 const expensive_routes_1 = __importDefault(require("./src/modules/expensive/routes/expensive.routes"));
+const ingresos_routes_1 = __importDefault(require("./src/modules/ingresos/routes/ingresos.routes"));
 const errorHandles_1 = require("./src/middleware/errorHandles");
 // Crear instancia de Express
 const app = (0, express_1.default)();
@@ -20,5 +21,6 @@ app.use(express_1.default.json());
 // Registrar rutas de autenticacion bajo /api/auth
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/expensive', expensive_routes_1.default);
+app.use('/api/ingresos', ingresos_routes_1.default);
 app.use(errorHandles_1.errorHandler);
 exports.default = app;

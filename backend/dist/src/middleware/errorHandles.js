@@ -9,7 +9,10 @@ function authenticateToken(req, res, next) {
         ? authorization.slice('Bearer '.length)
         : undefined;
     if (!token) {
-        res.status(401).json({ message: 'Token requerido' });
+        res.status(401).json({
+            message: 'Token requerido',
+            code: 'NO_TOKEN'
+        });
         return;
     }
     try {
@@ -17,10 +20,25 @@ function authenticateToken(req, res, next) {
         next();
     }
     catch (error) {
-        const message = error instanceof Error && error.name === 'TokenExpiredError'
-            ? 'El token expiro'
-            : 'Token invalido';
-        res.status(401).json({ message });
+        // Distinguir entre token expirado e inválido
+        if (error instanceof Error && error.name === 'TokenExpiredError') {
+            res.status(401).json({
+                message: 'El token ha expirado',
+                code: 'TOKEN_EXPIRED'
+            });
+        }
+        else if (error instanceof Error && error.message === 'Token invalido') {
+            res.status(401).json({
+                message: 'El token es inválido',
+                code: 'TOKEN_INVALID'
+            });
+        }
+        else {
+            res.status(401).json({
+                message: 'Error de autenticación',
+                code: 'AUTH_ERROR'
+            });
+        }
     }
 }
 function errorHandler(error, _req, res, _next) {
