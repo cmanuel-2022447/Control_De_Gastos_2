@@ -1,0 +1,31 @@
+{
+  "name": "control-de-gastos-backend",
+  "version": "1.0.0",
+  "description": "Backend básico para control de gastos",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "npx kill-port 3000 && cross-env DOTENV_QUIET=true ts-node-dev --respawn --exit-child server.ts",
+    "build": "tsc",
+    "db:seed": "ts-node src/database/seed.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.11.24",
+    "@types/pg": "^8.23.1",
+    "cross-env": "^10.1.0",
+    "kill-port": "^2.0.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}
