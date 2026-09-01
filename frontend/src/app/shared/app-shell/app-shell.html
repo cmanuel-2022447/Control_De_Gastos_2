@@ -1,32 +1,34 @@
-<div class="app-shell" [class.dark-mode]="modoOscuro">
+<div class="app-shell" [class.dark-mode]="modoOscuro" [class.dashboard-shell]="activePage === 'dashboard'">
   <aside class="sidebar">
     <div>
-      <div class="sidebar-brand"><div class="sidebar-logo"><img src="assets/logo.png" alt="Logo de la empresa" /></div><strong>Control<br />de gastos</strong></div>
+      <div class="sidebar-brand"><div class="sidebar-logo"><img src="assets/img/Logo.png" alt="Logo de la empresa" /></div><strong>Control<br />de gastos</strong></div>
       <span class="workspace-label">ESPACIO PERSONAL</span>
       <nav class="nav-menu">
-        <a class="nav-item" routerLink="/dashboard" [class.active]="activePage === 'dashboard'"><span class="nav-icon">⌂</span> Inicio <i *ngIf="activePage === 'dashboard'"></i></a>
-        <a class="nav-item" routerLink="/ingresos" [class.active]="activePage === 'ingresos'"><span class="nav-icon">▤</span> Ingresos <i *ngIf="activePage === 'ingresos'"></i></a>
-        <a class="nav-item" routerLink="/gastos" [class.active]="activePage === 'gastos'"><span class="nav-icon">▣</span> Gastos <i *ngIf="activePage === 'gastos'"></i></a>
-        <a class="nav-item" routerLink="/planificar-evento" [class.active]="activePage === 'planificar-evento'"><span class="nav-icon">▤</span> Planificar evento <i *ngIf="activePage === 'planificar-evento'"></i></a>
+        <a class="nav-item" routerLink="/dashboard" [class.active]="activePage === 'dashboard'"><img class="nav-item-icon" src="assets/img/Dashboard.png" alt="" /><span>Dashboard</span> <i *ngIf="activePage === 'dashboard'"></i></a>
+        <a class="nav-item" routerLink="/ingresos" [class.active]="activePage === 'ingresos'"><img class="nav-item-icon" src="assets/img/Ingresos.png" alt="" /><span>Ingresos</span> <i *ngIf="activePage === 'ingresos'"></i></a>
+        <a class="nav-item" routerLink="/gastos" [class.active]="activePage === 'gastos'"><img class="nav-item-icon" src="assets/img/Gastos.png" alt="" /><span>Gastos</span> <i *ngIf="activePage === 'gastos'"></i></a>
+        <a class="nav-item" routerLink="/planificar-evento" [class.active]="activePage === 'planificar-evento'"><img class="nav-item-icon" src="assets/img/Planificar%20Evento.png" alt="" /><span>Planificar evento</span> <i *ngIf="activePage === 'planificar-evento'"></i></a>
         <hr />
-        <a class="nav-item" routerLink="/perfil" [class.active]="activePage === 'perfil'"><span class="nav-icon">♟</span> Perfil <i *ngIf="activePage === 'perfil'"></i></a>
-        <div class="settings-menu"><button class="nav-item" type="button" (click)="alternarConfiguraciones()"><span class="nav-icon">⚙</span> Configuraciones</button>
+        <a class="nav-item" routerLink="/perfil" [class.active]="activePage === 'perfil'"><img class="nav-item-icon" src="assets/img/Perfil.png" alt="" /><span>Perfil</span> <i *ngIf="activePage === 'perfil'"></i></a>
+        <div class="settings-menu"><button class="nav-item" type="button" [class.active]="configuracionesAbiertas" (click)="alternarConfiguraciones()"><img class="nav-item-icon" src="assets/img/Configuraciones.png" alt="" /><span>Configuraciones</span></button>
           <div *ngIf="configuracionesAbiertas" class="settings-popover">
             <div class="settings-heading"><strong>Apariencia</strong><button type="button" (click)="alternarConfiguraciones()" aria-label="Cerrar configuraciones">×</button></div>
             <p>Elige el modo de la aplicación</p>
-            <div class="theme-options"><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)">☀ Claro</button><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)">◐ Oscuro</button></div>
+            <div class="theme-options"><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)"><img src="assets/img/Claro.png" alt="" /> Claro</button><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)"><img src="assets/img/Oscuro.png" alt="" /> Oscuro</button></div>
           </div>
         </div>
         <hr />
-        <a class="nav-item" routerLink="/ayuda" [class.active]="activePage === 'ayuda'"><span class="nav-icon">◉</span> Ayuda <i *ngIf="activePage === 'ayuda'"></i></a>
       </nav>
     </div>
-    <button class="logout-button" type="button" (click)="logout()">↪ <span>Cerrar sesión</span></button>
+    <div class="sidebar-footer">
+      <a class="nav-item help-link" routerLink="/ayuda" [class.active]="activePage === 'ayuda'"><img class="nav-item-icon" src="assets/img/Ayuda.png" alt="" /><span>Ayuda</span> <i *ngIf="activePage === 'ayuda'"></i></a>
+      <button class="logout-button" type="button" (click)="logout()"><img class="nav-item-icon" src="assets/img/Salir.png" alt="" /><span>Cerrar sesión</span></button>
+    </div>
   </aside>
   <main class="main-panel">
     <header class="top-white-container">
       <div>
-        <h2>Hola, <span>bienvenido</span></h2>
+        <h2><span class="welcome-word">Bienvenido</span>, <span>{{ etiquetaRol }}</span></h2>
         <p class="subtitle">Gestiona tus gastos con más claridad y menos ruido.</p>
       </div>
       <div class="header-actions">
@@ -36,7 +38,9 @@
           <img class="search-icon" src="assets/img/Lupa.png" alt="" aria-hidden="true" />
           <div *ngIf="busqueda" class="search-results">
             <p *ngIf="!resultadosBusqueda.length">Sin coincidencias en esta página</p>
-            <button *ngFor="let resultado of resultadosBusqueda" type="button">{{ resultado }}</button>
+            <button *ngFor="let resultado of resultadosBusqueda" type="button" (click)="irAResultado(resultado)">
+              <span [innerHTML]="resultado.texto.replace(busquedaResaltada, '<mark>' + busquedaResaltada + '</mark>')"></span>
+            </button>
           </div>
         </div>
         <div class="profile-menu">
