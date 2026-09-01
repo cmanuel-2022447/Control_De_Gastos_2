@@ -1,14 +1,24 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * INTERCEPTOR DE AUTENTICACIÓN
+ * 
+ * Responsabilidades:
+ * 1. Agregar token JWT a TODAS las peticiones (si existe)
+ * 2. Detectar errores 401/403 del backend
+ * 3. Llamar al servicio de autenticación para manejar sesión expirada
+ * 
+ * IMPORTANTE: El manejo de múltiples 401 está centralizado en AuthService
+ * NO duplicar lógica aquí
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const router = inject(Router);
   const token = authService.getToken();
 
+  // Agregar Authorization header si tenemos token
   let clonedReq = req;
   if (token) {
     clonedReq = req.clone({
@@ -20,27 +30,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && token && !req.url.endsWith('/login')) {
-        authService.logout();
-        
-        // Disparamos un diálogo visual amigable en lugar de un error técnico
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = `
-          <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-            <div style="background: white; padding: 30px; border-radius: 8px; text-align: center; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-              <h3 style="color: #333; margin-bottom: 10px;">Tu sesión ha expirado</h3>
-              <p style="color: #666; font-size: 14px; margin-bottom: 20px;">El tiempo de inicio de sesión terminó por seguridad. Vuelve a iniciar sesión para continuar.</p>
-              <button id="btn-relogin" style="background: #134074; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Iniciar sesión nuevamente</button>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(modalContainer);
-
-        document.getElementById('btn-relogin')?.addEventListener('click', () => {
-          document.body.removeChild(modalContainer);
-          router.navigate(['/login']);
-        });
+      // Detectar si el backend rechazó autenticación
+      if (error.status === 401) {
+        // Solo procesar 401 si hay token y no es una petición al login
+        // (el login puede devolver 401 por credenciales incorrectas)
+        if (token && !req.url.endsWith('/login') && !req.url.endsWith('/register')) {
+          // Notificar al servicio de autenticación
+          // La deduplicación se maneja en AuthService
+          authService.sesionRechazadaPorBackend();
+        }
       }
+
+      // IMPORTANTE: Re-lanzar el error
+      // NO ocultarlo con un .of([])
+      // Las peticiones deben fallar correctamente cuando el token expire
+      // Esto permite que los componentes/servicios manejen el error apropiadamente
       return throwError(() => error);
     })
   );
