@@ -1,186 +1,136 @@
 # Control de Gastos
 
-Sistema de gestión de gastos personales con arquitectura moderna, construido con TypeScript, Angular, pgAdmin y Node.js.
+Aplicación para gestionar ingresos, gastos y presupuesto personal con una estructura modular en Node.js + Express y Angular.
 
 ## Descripción
 
-Control de Gastos es una aplicación web que permite a los usuarios registrar, categorizar y monitorear sus gastos de forma fácil e intuitiva. La aplicación proporcionara herramientas para visualizar y analizar patrones de gasto con una interfaz moderna y responsiva.
+Control de Gastos permite registrar movimientos financieros, consultar métricas del resumen del día, visualizar presupuestos y administrar la sesión del usuario. La aplicación se ha ido reforzando con una capa de autenticación JWT más robusta y con ajustes visuales del dashboard para mejorar la experiencia general.
 
-## Tecnologías Utilizadas
+## Stack actual
 
 ### Backend
-- **Runtime**: Node.js
-- **Lenguaje**: TypeScript
-- **Framework**: Express.js (inferido por la estructura)
-- **Gestor de paquetes**: pnpm
-- **Arquitectura**: Modular (MVC - Model View Controller)
+- Node.js
+- TypeScript
+- Express
+- PostgreSQL
+- JWT para autenticación
+- pnpm como gestor de paquetes
 
 ### Frontend
-- **Framework**: Angular (versión moderna con standalone components)
-- **Lenguaje**: TypeScript
-- **Herramientas de build**: Angular CLI
-- **Gestor de paquetes**: pnpm
-- **Características**: 
-  - Server-Side Rendering (SSR) habilitado
-  - Componentes standalone
-  - Routing avanzado
+- Angular con componentes standalone
+- TypeScript
+- Routing y guards
+- Servicios reactivos para autenticación y sesión
+- Estilos personalizados para dashboard y shell global
 
-### DevOps & Configuración
-- **Control de versiones**: Git
-- **Workspace**: pnpm workspace monorepo
-- **Configuración**: TypeScript strict mode
+## Estructura del proyecto
 
-## Estructura del Proyecto
-
-```
+```bash
 control_de_gastos/
-├── backend/                          # Servidor Node.js con Express
-│   ├── src/
-│   │   └── modules/
-│   │       ├── auth/                 # Módulo de autenticación
-│   │       │   ├── controller/
-│   │       │   ├── services/
-│   │       │   └── routes/
-│   │       └── expensive/            # Módulo de gastos
-│   │           ├── controller/
-│   │           ├── model/
-│   │           ├── services/
-│   │           └── routes/
-│   ├── app.ts                        # Configuración de la aplicación
-│   ├── server.ts                     # Punto de entrada del servidor
+├── backend/
+│   ├── app.ts
+│   ├── server.ts
+│   ├── package.json
 │   ├── tsconfig.json
-│   └── package.json
+│   ├── .env
+│   └── src/
+│       ├── config/
+│       ├── middleware/
+│       ├── modules/
+│       │   ├── auth/
+│       │   ├── expensive/
+│       │   ├── ingresos/
+│       │   └── ...
+│       └── util/
 │
-├── frontend/                         # Aplicación Angular
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── app.ts                # Componente principal
-│   │   │   ├── app.routes.ts         # Rutas de la aplicación
-│   │   │   ├── app.config.ts         # Configuración de Angular
-│   │   │   ├── app.config.server.ts  # Configuración SSR
-│   │   │   ├── login.component.ts    # Componente de login
-│   │   │   └── bienvenida.component.ts
-│   │   ├── main.ts                   # Punto de entrada client-side
-│   │   ├── main.server.ts            # Punto de entrada server-side
-│   │   ├── styles.css                # Estilos globales
-│   │   └── index.html
+├── frontend/
 │   ├── angular.json
+│   ├── package.json
+│   ├── pnpm-lock.yaml
 │   ├── tsconfig.json
-│   └── package.json
+│   └── src/
+│       ├── app/
+│       ├── assets/
+│       ├── index.html
+│       └── main.ts
 │
-└── README.md                         # Este archivo
+├── README.md
 ```
 
-## Primeros Pasos
+## Módulos principales
 
-### Requisitos Previos
-- Node.js (v18 o superior)
-- pnpm (gestor de paquetes)
+### Backend
+- auth: login, registro y manejo del token JWT.
+- ingresos: gestión de ingresos del usuario.
+- expensive: gestión de gastos.
+- middleware: validación de autenticación y control de errores.
+- util/jwt.ts: lógica para generar y verificar tokens.
 
-### Instalación
+### Frontend
+- app-shell: layout global con sidebar, branding y navegación compartida.
+- dashboard: resumen financiero principal.
+- login: autenticación del usuario.
+- register: creación de cuentas.
+- perfil: datos del usuario.
+- configuraciones: ajustes visuales y de apariencia.
 
-1. **Clonar el repositorio**
-```bash
-git clone <url-del-repositorio>
-cd control_de_gastos
+## Flujo de autenticación actual
+
+1. El usuario ingresa sus credenciales.
+2. El backend valida las credenciales.
+3. Se genera un JWT con expiración.
+4. El frontend guarda el token para las peticiones futuras.
+5. Cuando el backend responde 401, el frontend reacciona de forma controlada.
+6. La expiración local se usa solo para UX y anticipación visual.
+7. La autoridad final sigue estando en el backend.
+8. En logout manual, se limpia la sesión y se redirige a login sin mostrar la alerta de expiración.
+
+## Variables de entorno
+
+El backend usa variables de entorno, incluyendo la secret y el tiempo de expiración JWT. Es importante mantener ambas configuradas correctamente para que la sesión funcione con tiempos cortos o largos.
+
+Ejemplo conceptual:
+
+```env
+JWT_SECRET=tu_secret
+JWT_EXPIRES_IN=1h
 ```
 
-2. **Instalar dependencias**
+## Instalación
+
+### Requisitos
+- Node.js
+- pnpm
+- PostgreSQL
+
+### Dependencias
 ```bash
-# Instalar todas las dependencias del workspace
+cd backend
+pnpm install
+
+cd ../frontend
 pnpm install
 ```
 
-### Desarrollo
-
-#### Backend
+### Ejecutar backend
 ```bash
 cd backend
 pnpm run dev
-# El servidor iniciará en http://localhost:3000 (por defecto)
 ```
 
-#### Frontend
+### Ejecutar frontend
 ```bash
 cd frontend
 pnpm start
-# La aplicación estará disponible en http://localhost:4200
 ```
 
-### Build para Producción
+## Notas importantes
 
-#### Backend
-```bash
-cd backend
-pnpm run build
-pnpm start
-```
+- La validación real del JWT se hace en el backend.
+- El frontend no debe ser la fuente de verdad para autenticación.
+- Los ajustes visuales de layout y dashboard no cambian la lógica del negocio ni la seguridad.
+- El branding del sidebar y el dashboard se han mejorado para una experiencia más clara y moderna.
 
-#### Frontend
-```bash
-cd frontend
-pnpm run build
-# Los archivos compilados estarán en dist/
-```
+## Estado actual
 
-## Módulos Principales
-
-### Autenticación (auth)
-Responsable de autenticacion y manejo de credenciales.
-
-**Ubicacion**: `backend/src/modules/auth/`
-
-Componentes:
-- **controller/auth.controller.ts**: Maneja peticiones HTTP POST /login
-  - Recibe email y password
-  - Delega validacion al servicio
-  - Retorna token JWT
-
-- **services/auth.service.ts**: Logica de autenticacion
-  - Valida credenciales contra base de datos
-  - Requiere una conexión activa a PostgreSQL
-
-- **routes/auth.routes.ts**: Definicion de endpoints
-  - POST /api/auth/login - Autentica usuario
-
-## Componentes Frontend
-
-### Componente Raiz (app.ts)
-- Contenedor principal
-- Carga router outlet
-- Rutas distribuyen a componentes segun path
-
-### Componente Login (login.component.ts)
-- Interfaz de autenticacion
-- Recibe email y password
-- Valida con backend
-  - Permite ingresar credenciales registradas en PostgreSQL
-- Genera sesion con token JWT
-- Ruta: `/` (raiz)
-
-### Componente Bienvenida (bienvenida.component.ts)
-- Dashboard principal
-- Mostrado despues de login exitoso
-- Sidebar con menu de navegacion
-- Contenido principal con panel de control
-- Boton logout
-- Ruta: `/bienvenidos`
-
-### Configuracion de Rutas (app.routes.ts)
-```
-/ -> LoginComponent
-/bienvenidos -> BienvenidaComponent
-```
-
-## Flujo de Autenticacion
-
-1. Usuario accede a la aplicacion (ruta /)
-2. Se carga LoginComponent
-3. Usuario ingresa email y password
-4. Frontend envia POST /api/auth/login
-5. Backend valida credenciales en AuthService
-6. Backend genera JWT
-7. Backend retorna token
-8. Frontend almacena token en sesion
-9. Frontend redirige a /bienvenidos
-10. Se carga BienvenidaComponent con datos del usuario
+El proyecto se encuentra en una versión funcional con autenticación JWT reforzada, dashboard visualmente mejorado y flujo de logout más limpio para la experiencia del usuario.
