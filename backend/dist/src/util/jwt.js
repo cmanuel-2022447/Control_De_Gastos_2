@@ -13,7 +13,7 @@ if (!JWT_SECRET) {
     throw new Error('JWT_SECRET no está configurado en variables de entorno. ' +
         'Por seguridad, debes establecer JWT_SECRET en el archivo .env con un valor de al menos 32 caracteres.');
 }
-const TOKEN_EXPIRATION = process.env.JWT_EXPIRES_IN || '4h';
+const TOKEN_EXPIRATION = process.env.JWT_EXPIRES_IN || '3m';
 function generateToken(payload) {
     const options = { expiresIn: TOKEN_EXPIRATION };
     return jsonwebtoken_1.default.sign(payload, JWT_SECRET, options);

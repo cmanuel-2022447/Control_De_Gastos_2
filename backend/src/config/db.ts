@@ -47,6 +47,16 @@ export async function initializeDatabase(): Promise<void> {
     `);
 
     await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_usuarios_correo_lower
+        ON public.usuarios ((LOWER(correo)));
+    `);
+
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_usuarios_usuario_lower
+        ON public.usuarios ((LOWER(usuario)));
+    `);
+
+    await pool.query(`
         ALTER TABLE IF EXISTS public.ingresos
         DROP COLUMN IF EXISTS created_at;
     `);

@@ -11,15 +11,23 @@ export class AuthService {
             throw new Error('INVALID_CREDENTIALS');
         }
 
-        const result = await pool.query(
-            `SELECT id, usuario, correo, password, rol 
-             FROM public.usuarios 
-             WHERE LOWER(correo) = LOWER($1) OR LOWER(usuario) = LOWER($1) 
-             LIMIT 1`,
-            [cleanLogin]
-        );
+        const lookupValue = cleanLogin.toLowerCase();
+        const userQuery = cleanLogin.includes('@')
+            ? `SELECT id, usuario, correo, password, rol
+               FROM public.usuarios
+               WHERE LOWER(correo) = $1
+               LIMIT 1`
+            : `SELECT id, usuario, correo, password, rol
+               FROM public.usuarios
+               WHERE LOWER(usuario) = $1
+               LIMIT 1`;
 
+        const result = await pool.query(userQuery, [lookupValue]);
         const user = result.rows[0];
+
+        // El costo de bcrypt.compare es deliberado: hace que la validación de contraseña sea
+        // segura frente a ataques de fuerza bruta. Este tiempo no se debe eliminar ni ocultar,
+        // pero sí se puede reducir el costo de la búsqueda previa con consultas más eficientes.
 
         if (!user) {
             throw new Error('INVALID_CREDENTIALS');

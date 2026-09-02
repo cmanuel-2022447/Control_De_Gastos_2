@@ -12,7 +12,7 @@ if (!JWT_SECRET) {
 }
 
 const TOKEN_EXPIRATION: SignOptions['expiresIn'] =
-    (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) || '4h';
+    (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) || '3m';
 
 export interface AuthTokenPayload extends JwtPayload {
     id: number;

@@ -14,7 +14,7 @@ const db_1 = require("../../../config/db");
 const getAllIngresos = () => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield db_1.pool.query(`SELECT id, fecha, descripcion, lugar, original, conversion
      FROM public.ingresos
-     ORDER BY fecha DESC, id DESC`);
+     ORDER BY fecha ASC, id ASC`);
     return result.rows.map((row) => (Object.assign(Object.assign({}, row), { original: String(row.original), conversion: String(row.conversion) })));
 });
 exports.getAllIngresos = getAllIngresos;
@@ -24,16 +24,22 @@ const saveIngreso = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const descripcion = String((data === null || data === void 0 ? void 0 : data.descripcion) || '').trim();
     const lugar = String((data === null || data === void 0 ? void 0 : data.lugar) || '').trim();
     const moneda = String((data === null || data === void 0 ? void 0 : data.moneda) || 'GTQ').trim().toUpperCase();
+    const monedaDestino = String((data === null || data === void 0 ? void 0 : data.monedaDestino) || (moneda === 'USD' ? 'GTQ' : 'USD')).trim().toUpperCase();
     const monto = Number(data === null || data === void 0 ? void 0 : data.monto);
     const tasaCambio = Number((_b = (_a = data === null || data === void 0 ? void 0 : data.tasa_cambio) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.tasaCambio) !== null && _b !== void 0 ? _b : 7.68);
     if (!fecha || !descripcion || !lugar || !Number.isFinite(monto) || monto <= 0) {
         throw new Error('INVALID_INCOME_DATA');
     }
-    if (!['GTQ', 'USD'].includes(moneda)) {
+    if (!['GTQ', 'USD'].includes(moneda) || !['GTQ', 'USD'].includes(monedaDestino)) {
         throw new Error('INVALID_INCOME_DATA');
     }
+    const montoConvertido = moneda === monedaDestino
+        ? monto
+        : moneda === 'USD' && monedaDestino === 'GTQ'
+            ? monto * tasaCambio
+            : monto / tasaCambio;
     const original = `${moneda} ${monto.toFixed(2)}`;
-    const conversion = `${moneda === 'USD' ? 'GTQ' : 'USD'} ${tasaCambio.toFixed(2)}`;
+    const conversion = `${monedaDestino} ${montoConvertido.toFixed(2)}`;
     const result = yield db_1.pool.query(`INSERT INTO public.ingresos (fecha, descripcion, lugar, original, conversion)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING id, fecha, descripcion, lugar, original, conversion`, [fecha, descripcion, lugar, original, conversion]);
@@ -47,13 +53,22 @@ const updateIngreso = (id, data) => __awaiter(void 0, void 0, void 0, function* 
     const descripcion = String((data === null || data === void 0 ? void 0 : data.descripcion) || '').trim();
     const lugar = String((data === null || data === void 0 ? void 0 : data.lugar) || '').trim();
     const moneda = String((data === null || data === void 0 ? void 0 : data.moneda) || 'GTQ').trim().toUpperCase();
+    const monedaDestino = String((data === null || data === void 0 ? void 0 : data.monedaDestino) || (moneda === 'USD' ? 'GTQ' : 'USD')).trim().toUpperCase();
     const monto = Number(data === null || data === void 0 ? void 0 : data.monto);
     const tasaCambio = Number((_b = (_a = data === null || data === void 0 ? void 0 : data.tasa_cambio) !== null && _a !== void 0 ? _a : data === null || data === void 0 ? void 0 : data.tasaCambio) !== null && _b !== void 0 ? _b : 7.68);
     if (!fecha || !descripcion || !lugar || !Number.isFinite(monto) || monto <= 0) {
         throw new Error('INVALID_INCOME_DATA');
     }
+    if (!['GTQ', 'USD'].includes(moneda) || !['GTQ', 'USD'].includes(monedaDestino)) {
+        throw new Error('INVALID_INCOME_DATA');
+    }
+    const montoConvertido = moneda === monedaDestino
+        ? monto
+        : moneda === 'USD' && monedaDestino === 'GTQ'
+            ? monto * tasaCambio
+            : monto / tasaCambio;
     const original = `${moneda} ${monto.toFixed(2)}`;
-    const conversion = `${moneda === 'USD' ? 'GTQ' : 'USD'} ${tasaCambio.toFixed(2)}`;
+    const conversion = `${monedaDestino} ${montoConvertido.toFixed(2)}`;
     const result = yield db_1.pool.query(`UPDATE public.ingresos
      SET fecha = $1,
          descripcion = $2,
