@@ -24,11 +24,13 @@ class AuthService {
             if (!cleanLogin || !cleanPassword) {
                 throw new Error('INVALID_CREDENTIALS');
             }
-            const result = yield db_1.pool.query(`SELECT id, usuario, correo, password, rol 
-             FROM public.usuarios 
-             WHERE LOWER(correo) = LOWER($1) OR LOWER(usuario) = LOWER($1) 
+            const result = yield db_1.pool.query(`SELECT id, usuario, correo, password, rol
+             FROM public.usuarios
+             WHERE LOWER(correo) = LOWER($1) OR LOWER(usuario) = LOWER($1)
              LIMIT 1`, [cleanLogin]);
             const user = result.rows[0];
+            // Esta comparación es intencionalmente costosa para proteger contra ataques de fuerza bruta.
+            // No se elimina porque es la parte que valida la contraseña de forma segura.
             if (!user) {
                 throw new Error('INVALID_CREDENTIALS');
             }

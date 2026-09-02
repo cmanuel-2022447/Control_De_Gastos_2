@@ -78,6 +78,33 @@ export class IngresosComponent implements OnInit, OnDestroy {
     return ingreso.moneda === 'USD' ? (ingreso.montoQuetzales ?? ingreso.monto * this.tasaCambio) : ingreso.monto;
   }
 
+  obtenerMontoConvertido(ingreso: Ingreso): number {
+    const conversion = this.parseMonedaMonto((ingreso as any).conversion || `${ingreso.monedaDestino} ${this.montoConvertidoParaIngreso(ingreso)}`);
+    return conversion.monto || this.montoConvertidoParaIngreso(ingreso);
+  }
+
+  private montoConvertidoParaIngreso(ingreso: Ingreso): number {
+    if (ingreso.moneda === ingreso.monedaDestino) return ingreso.monto;
+    if (ingreso.moneda === 'USD' && ingreso.monedaDestino === 'GTQ') return ingreso.monto * this.tasaCambio;
+    if (ingreso.moneda === 'GTQ' && ingreso.monedaDestino === 'USD') return ingreso.monto / this.tasaCambio;
+    return ingreso.monto;
+  }
+
+  private parseMonedaMonto(valor: string): { moneda: string; monto: number } {
+    const texto = String(valor || '').trim();
+    if (!texto) return { moneda: '', monto: 0 };
+
+    const partes = texto.split(/\s+/).filter(Boolean);
+    if (partes.length >= 2) {
+      return {
+        moneda: String(partes[0]).toUpperCase(),
+        monto: Number(partes[1]) || 0
+      };
+    }
+
+    return { moneda: '', monto: Number(texto) || 0 };
+  }
+
   abrirFormulario(): void {
     this.editandoId = null;
     this.nuevoIngreso = this.formularioVacio();
@@ -136,7 +163,8 @@ export class IngresosComponent implements OnInit, OnDestroy {
       moneda: ing.moneda,
       monedaDestino: ing.monedaDestino,
       monto: ing.monto,
-      montoQuetzales: ing.montoQuetzales
+      montoQuetzales: ing.montoQuetzales,
+      conversion: ing.conversion
     }));
   }
 
@@ -154,4 +182,5 @@ interface Ingreso {
   monedaDestino: 'GTQ' | 'USD';
   monto: number;
   montoQuetzales: number;
+  conversion?: string;
 }

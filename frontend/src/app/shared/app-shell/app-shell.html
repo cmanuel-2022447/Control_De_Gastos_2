@@ -4,20 +4,24 @@
       <div class="sidebar-brand"><div class="sidebar-logo"><img src="assets/img/Logo.png" alt="Logo de la empresa" /></div><strong>Control<br />de gastos</strong></div>
       <span class="workspace-label">ESPACIO PERSONAL</span>
       <nav class="nav-menu">
-        <a class="nav-item" routerLink="/dashboard" [class.active]="activePage === 'dashboard'"><img class="nav-item-icon" src="assets/img/Dashboard.png" alt="" /><span>Dashboard</span> <i *ngIf="activePage === 'dashboard'"></i></a>
-        <a class="nav-item" routerLink="/ingresos" [class.active]="activePage === 'ingresos'"><img class="nav-item-icon" src="assets/img/Ingresos.png" alt="" /><span>Ingresos</span> <i *ngIf="activePage === 'ingresos'"></i></a>
-        <a class="nav-item" routerLink="/gastos" [class.active]="activePage === 'gastos'"><img class="nav-item-icon" src="assets/img/Gastos.png" alt="" /><span>Gastos</span> <i *ngIf="activePage === 'gastos'"></i></a>
-        <a class="nav-item" routerLink="/planificar-evento" [class.active]="activePage === 'planificar-evento'"><img class="nav-item-icon" src="assets/img/Planificar%20Evento.png" alt="" /><span>Planificar evento</span> <i *ngIf="activePage === 'planificar-evento'"></i></a>
-        <hr />
-        <a class="nav-item" routerLink="/perfil" [class.active]="activePage === 'perfil'"><img class="nav-item-icon" src="assets/img/Perfil.png" alt="" /><span>Perfil</span> <i *ngIf="activePage === 'perfil'"></i></a>
-        <div class="settings-menu"><button class="nav-item" type="button" [class.active]="configuracionesAbiertas" (click)="alternarConfiguraciones()"><img class="nav-item-icon" src="assets/img/Configuraciones.png" alt="" /><span>Configuraciones</span></button>
-          <div *ngIf="configuracionesAbiertas" class="settings-popover">
-            <div class="settings-heading"><strong>Apariencia</strong><button type="button" (click)="alternarConfiguraciones()" aria-label="Cerrar configuraciones">×</button></div>
-            <p>Elige el modo de la aplicación</p>
-            <div class="theme-options"><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)"><img src="assets/img/Claro.png" alt="" /> Claro</button><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)"><img src="assets/img/Oscuro.png" alt="" /> Oscuro</button></div>
-          </div>
+        <div class="nav-primary">
+          <a class="nav-item" routerLink="/dashboard" [class.active]="activePage === 'dashboard'"><img class="nav-item-icon" src="assets/img/Dashboard.png" alt="" /><span>Dashboard</span> <i *ngIf="activePage === 'dashboard'"></i></a>
+          <a class="nav-item" routerLink="/ingresos" [class.active]="activePage === 'ingresos'"><img class="nav-item-icon" src="assets/img/Ingresos.png" alt="" /><span>Ingresos</span> <i *ngIf="activePage === 'ingresos'"></i></a>
+          <a class="nav-item" routerLink="/gastos" [class.active]="activePage === 'gastos'"><img class="nav-item-icon" src="assets/img/Gastos.png" alt="" /><span>Gastos</span> <i *ngIf="activePage === 'gastos'"></i></a>
+          <a class="nav-item" routerLink="/planificar-evento" [class.active]="activePage === 'planificar-evento'"><img class="nav-item-icon" src="assets/img/Planificar%20Evento.png" alt="" /><span>Planificar evento</span> <i *ngIf="activePage === 'planificar-evento'"></i></a>
         </div>
         <hr />
+        <div class="nav-secondary">
+          <a class="nav-item" routerLink="/perfil" [class.active]="activePage === 'perfil'"><img class="nav-item-icon" src="assets/img/Perfil.png" alt="" /><span>Perfil</span> <i *ngIf="activePage === 'perfil'"></i></a>
+          <div class="settings-menu"><button class="nav-item" type="button" [class.active]="configuracionesAbiertas" (click)="alternarConfiguraciones()"><img class="nav-item-icon" src="assets/img/Configuraciones.png" alt="" /><span>Configuraciones</span></button>
+            <div *ngIf="configuracionesAbiertas" class="settings-popover">
+              <div class="settings-heading"><strong>Apariencia</strong><button type="button" (click)="alternarConfiguraciones()" aria-label="Cerrar configuraciones">×</button></div>
+              <p>Elige el modo de la aplicación</p>
+              <div class="theme-options"><button type="button" [class.selected]="!modoOscuro" (click)="cambiarTema(false)"><img src="assets/img/Claro.png" alt="" /> Claro</button><button type="button" [class.selected]="modoOscuro" (click)="cambiarTema(true)"><img src="assets/img/Oscuro.png" alt="" /> Oscuro</button></div>
+            </div>
+          </div>
+        </div>
+        <hr class="nav-separator-footer" />
       </nav>
     </div>
     <div class="sidebar-footer">
@@ -29,7 +33,7 @@
     <header class="top-white-container">
       <div>
         <h2><span class="welcome-word">Bienvenido</span>, <span>{{ etiquetaRol }}</span></h2>
-        <p class="subtitle">Gestiona tus gastos con más claridad y menos ruido.</p>
+        <p class="subtitle">Gestione sus gastos con más claridad y menos ruido.</p>
       </div>
       <div class="header-actions">
         <div class="quick-search">
