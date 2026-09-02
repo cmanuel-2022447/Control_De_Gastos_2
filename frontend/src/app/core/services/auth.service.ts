@@ -248,10 +248,9 @@ export class AuthService {
       return;
     }
 
-    // Cerrar DINÁMICAMENTE: 50% del tiempo antes de que expire
-    // (si JWT_EXPIRES_IN=1s → cierra en 0.5s, si JWT_EXPIRES_IN=1h → cierra en 30min)
-    const ANTICIPACION_PORCENTAJE = 0.5; // 50% del tiempo
-    const tiempoEspera = Math.max(100, tiempoRestante * ANTICIPACION_PORCENTAJE * 1000);
+    // TIEMPO DE EXPIRACION
+    const ANTICIPACION_PORCENTAJE = 1; 
+    const tiempoEspera = tiempoRestante * 1000;
 
     this.expirationTimer = setTimeout(() => {
       this._terminarSesion('cierre_automatico_previo');
@@ -284,7 +283,7 @@ export class AuthService {
 
       if (mostrarAviso) {
         // Mostrar aviso solo para expiración/401 reales
-        this.sessionExpiredNotice.set('Tu sesión ha expirado. Debes iniciar sesión nuevamente.');
+        this.sessionExpiredNotice.set('Su sesión ha expirado. Debe iniciar sesión nuevamente.');
       } else {
         this.sessionExpiredNotice.set('');
       }
