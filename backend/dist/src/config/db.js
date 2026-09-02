@@ -62,6 +62,14 @@ function initializeDatabase() {
         );
     `);
         yield exports.pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_usuarios_correo_lower
+        ON public.usuarios ((LOWER(correo)));
+    `);
+        yield exports.pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_usuarios_usuario_lower
+        ON public.usuarios ((LOWER(usuario)));
+    `);
+        yield exports.pool.query(`
         ALTER TABLE IF EXISTS public.ingresos
         DROP COLUMN IF EXISTS created_at;
     `);

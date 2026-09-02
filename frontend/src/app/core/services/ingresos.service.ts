@@ -118,23 +118,41 @@ export class IngresosService {
 
     return data.map((ingreso) => {
       const original = String(ingreso.original || '').trim();
-      const [monedaOriginal, montoOriginal] = original.split(' ');
       const conversion = String(ingreso.conversion || '').trim();
-      const [monedaConversion] = conversion.split(' ');
+      const originalParsed = this.parseMonedaMonto(original);
+      const conversionParsed = this.parseMonedaMonto(conversion);
+      const monedaOriginal = (originalParsed.moneda as 'GTQ' | 'USD') || 'GTQ';
+      const monedaDestino = (conversionParsed.moneda as 'GTQ' | 'USD') || (monedaOriginal === 'USD' ? 'GTQ' : 'USD');
+      const montoOriginal = Number(originalParsed.monto || 0);
+      const montoConvertido = Number(conversionParsed.monto || 0);
+      const montoQuetzales = monedaOriginal === 'USD' ? montoOriginal * 7.68 : montoOriginal;
 
       return {
         id: ingreso.id,
         fecha: String(ingreso.fecha ?? '').slice(0, 10),
         descripcion: ingreso.descripcion,
         lugar: ingreso.lugar,
-        moneda: (monedaOriginal as 'GTQ' | 'USD') || 'GTQ',
-        monedaDestino: (monedaConversion as 'GTQ' | 'USD') || 'USD',
-        monto: Number(montoOriginal || 0),
-        montoQuetzales: Number(montoOriginal || 0),
+        moneda: monedaOriginal,
+        monedaDestino,
+        monto: montoOriginal,
+        montoQuetzales,
         original: ingreso.original,
-        conversion: ingreso.conversion
-      };
+        conversion: ingreso.conversion,
+        conversionMonto: montoConvertido
+      } as any
     });
+  }
+
+  private parseMonedaMonto(valor: string): { moneda: string; monto: number } {
+    const texto = String(valor || '').trim();
+    if (!texto) return { moneda: '', monto: 0 };
+
+    const partes = texto.split(/\s+/).filter(Boolean);
+    if (partes.length >= 2) {
+      return { moneda: String(partes[0]).toUpperCase(), monto: Number(partes[1]) || 0 };
+    }
+
+    return { moneda: '', monto: Number(texto) || 0 };
   }
 
   /**
@@ -143,15 +161,23 @@ export class IngresosService {
   private prepararPayload(ingreso: any): any {
     const tasaCambio = 7.68;
     const monto = Number(ingreso.monto) || 0;
-    
+    const origen = String(ingreso.moneda || 'GTQ').trim().toUpperCase();
+    const destino = String(ingreso.monedaDestino || (origen === 'USD' ? 'GTQ' : 'USD')).trim().toUpperCase();
+    const montoConvertido = origen === destino
+      ? monto
+      : origen === 'USD' && destino === 'GTQ'
+        ? monto * tasaCambio
+        : monto / tasaCambio;
+
     return {
       ...ingreso,
       fecha: String(ingreso.fecha).slice(0, 10),
-      moneda: ingreso.moneda,
+      moneda: origen,
+      monedaDestino: destino,
       monto,
       tasa_cambio: tasaCambio,
-      original: `${ingreso.moneda} ${monto.toFixed(2)}`,
-      conversion: `${ingreso.moneda === 'USD' ? 'GTQ' : 'USD'} ${tasaCambio.toFixed(2)}`
+      original: `${origen} ${monto.toFixed(2)}`,
+      conversion: `${destino} ${montoConvertido.toFixed(2)}`
     };
   }
 }

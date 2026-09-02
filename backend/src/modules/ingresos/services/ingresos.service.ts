@@ -13,7 +13,7 @@ export const getAllIngresos = async (): Promise<IngresoDbRow[]> => {
   const result = await pool.query(
     `SELECT id, fecha, descripcion, lugar, original, conversion
      FROM public.ingresos
-     ORDER BY fecha DESC, id DESC`
+     ORDER BY fecha ASC, id ASC`
   );
 
   return result.rows.map((row) => ({
@@ -28,6 +28,7 @@ export const saveIngreso = async (data: any): Promise<IngresoDbRow> => {
   const descripcion = String(data?.descripcion || '').trim();
   const lugar = String(data?.lugar || '').trim();
   const moneda = String(data?.moneda || 'GTQ').trim().toUpperCase();
+  const monedaDestino = String(data?.monedaDestino || (moneda === 'USD' ? 'GTQ' : 'USD')).trim().toUpperCase();
   const monto = Number(data?.monto);
   const tasaCambio = Number(data?.tasa_cambio ?? data?.tasaCambio ?? 7.68);
 
@@ -35,12 +36,18 @@ export const saveIngreso = async (data: any): Promise<IngresoDbRow> => {
     throw new Error('INVALID_INCOME_DATA');
   }
 
-  if (!['GTQ', 'USD'].includes(moneda)) {
+  if (!['GTQ', 'USD'].includes(moneda) || !['GTQ', 'USD'].includes(monedaDestino)) {
     throw new Error('INVALID_INCOME_DATA');
   }
 
+  const montoConvertido = moneda === monedaDestino
+    ? monto
+    : moneda === 'USD' && monedaDestino === 'GTQ'
+      ? monto * tasaCambio
+      : monto / tasaCambio;
+
   const original = `${moneda} ${monto.toFixed(2)}`;
-  const conversion = `${moneda === 'USD' ? 'GTQ' : 'USD'} ${tasaCambio.toFixed(2)}`;
+  const conversion = `${monedaDestino} ${montoConvertido.toFixed(2)}`;
 
   const result = await pool.query(
     `INSERT INTO public.ingresos (fecha, descripcion, lugar, original, conversion)
@@ -62,6 +69,7 @@ export const updateIngreso = async (id: number, data: any): Promise<IngresoDbRow
   const descripcion = String(data?.descripcion || '').trim();
   const lugar = String(data?.lugar || '').trim();
   const moneda = String(data?.moneda || 'GTQ').trim().toUpperCase();
+  const monedaDestino = String(data?.monedaDestino || (moneda === 'USD' ? 'GTQ' : 'USD')).trim().toUpperCase();
   const monto = Number(data?.monto);
   const tasaCambio = Number(data?.tasa_cambio ?? data?.tasaCambio ?? 7.68);
 
@@ -69,8 +77,18 @@ export const updateIngreso = async (id: number, data: any): Promise<IngresoDbRow
     throw new Error('INVALID_INCOME_DATA');
   }
 
+  if (!['GTQ', 'USD'].includes(moneda) || !['GTQ', 'USD'].includes(monedaDestino)) {
+    throw new Error('INVALID_INCOME_DATA');
+  }
+
+  const montoConvertido = moneda === monedaDestino
+    ? monto
+    : moneda === 'USD' && monedaDestino === 'GTQ'
+      ? monto * tasaCambio
+      : monto / tasaCambio;
+
   const original = `${moneda} ${monto.toFixed(2)}`;
-  const conversion = `${moneda === 'USD' ? 'GTQ' : 'USD'} ${tasaCambio.toFixed(2)}`;
+  const conversion = `${monedaDestino} ${montoConvertido.toFixed(2)}`;
 
   const result = await pool.query(
     `UPDATE public.ingresos

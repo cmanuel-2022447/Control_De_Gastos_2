@@ -23,10 +23,10 @@
 				<table>
 					<thead><tr><th>Fecha</th><th>Descripción</th><th>Lugar</th><th>Original</th><th>Conversión</th><th>Acciones</th></tr></thead>
 					<tbody>
-						<tr *ngFor="let ingreso of ingresosFiltrados">
+						<tr *ngFor="let ingreso of ingresosFiltrados" [id]="'ingreso-row-' + ingreso.id">
 							<td>{{ ingreso.fecha }}</td><td><strong>{{ ingreso.descripcion }}</strong></td><td>{{ ingreso.lugar }}</td>
 							<td><span class="currency-badge" [class.usd]="ingreso.moneda === 'USD'">{{ ingreso.moneda }} {{ ingreso.monto | number:'1.2-2' }}</span></td>
-							<td class="converted">{{ ingreso.monedaDestino || ingreso.moneda }} {{ aQuetzales(ingreso) | number:'1.2-2' }}</td>
+							<td class="converted">{{ ingreso.monedaDestino || ingreso.moneda }} {{ obtenerMontoConvertido(ingreso) | number:'1.2-2' }}</td>
 							<td class="row-actions"><button type="button" (click)="editarIngreso(ingreso)" aria-label="Editar ingreso">Editar</button><button type="button" (click)="eliminarIngreso(ingreso.id)" aria-label="Eliminar ingreso">Eliminar</button></td>
 						</tr>
 						<tr *ngIf="!ingresosFiltrados.length"><td class="empty-row" colspan="6">No hay ingresos que coincidan con la búsqueda.</td></tr>

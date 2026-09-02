@@ -1,8 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { IngresosService } from '../../core/services/ingresos.service';
 
 type ResultadoBusqueda = {
   texto: string;
@@ -19,13 +20,15 @@ type ContenidoBuscable = string | ResultadoBusqueda;
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css'
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnInit {
   @Input() activePage = '';
   @Input() searchableContent: ContenidoBuscable[] = [];
   configuracionesAbiertas = false;
   perfilAbierto = false;
   modoOscuro = false;
   busqueda = '';
+
+  private readonly registrosEnBusqueda: ResultadoBusqueda[] = [];
 
   private readonly informacionPorPagina: Record<string, string[]> = {
     dashboard: ['Dashboard', 'Resumen de hoy', 'Dinero restante', 'Ingresos', 'Gastos', 'Presupuesto para el evento', 'Extras'],
@@ -81,8 +84,19 @@ export class AppShellComponent {
     }
   };
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private ingresosService: IngresosService
+  ) {
     this.modoOscuro = localStorage.getItem('modoOscuro') === 'true';
+  }
+
+  ngOnInit(): void {
+    this.ingresosService.ingresos$.subscribe((ingresos) => {
+      this.registrosEnBusqueda.length = 0;
+      this.registrosEnBusqueda.push(...this.construirResultadosDesdeIngresos(ingresos));
+    });
   }
 
   alternarConfiguraciones(): void {
@@ -120,7 +134,11 @@ export class AppShellComponent {
     const consulta = this.busqueda.trim().toLowerCase();
     if (!consulta) return [];
 
-    const contenidoBuscable = [...Object.values(this.informacionPorPagina).flat(), ...(this.searchableContent || [])];
+    const contenidoBuscable = [
+      ...Object.values(this.informacionPorPagina).flat(),
+      ...(this.searchableContent || []),
+      ...this.registrosEnBusqueda
+    ];
     const vistos = new Set<string>();
 
     return contenidoBuscable
@@ -153,6 +171,35 @@ export class AppShellComponent {
       selector: item.selector || this.obtenerResultado(item.texto || '').selector,
       ruta: item.ruta || this.obtenerResultado(item.texto || '').ruta
     };
+  }
+
+  private construirResultadosDesdeIngresos(ingresos: Array<{ id?: number; fecha?: string; descripcion?: string; lugar?: string; moneda?: string; monto?: number; monedaDestino?: string; original?: string; conversion?: string }>): ResultadoBusqueda[] {
+    return ingresos.flatMap((ingreso) => {
+      const id = ingreso.id ?? 0;
+      const fecha = String(ingreso.fecha || '').trim();
+      const descripcion = String(ingreso.descripcion || '').trim();
+      const lugar = String(ingreso.lugar || '').trim();
+      const moneda = String(ingreso.moneda || 'GTQ').trim();
+      const monto = Number(ingreso.monto || 0);
+      const monedaDestino = String(ingreso.monedaDestino || (moneda === 'USD' ? 'GTQ' : 'USD')).trim();
+      const conversionTexto = String(ingreso.conversion || '').trim();
+      const originalTexto = String(ingreso.original || '').trim();
+      const campos = [
+        descripcion,
+        lugar,
+        fecha,
+        `${moneda} ${monto.toFixed(2)}`,
+        `${monedaDestino} ${Number(ingreso.monto || 0).toFixed(2)}`,
+        originalTexto,
+        conversionTexto
+      ].filter(Boolean);
+
+      return campos.map((texto) => ({
+        texto: `Ingreso • ${texto}`,
+        selector: id ? `#ingreso-row-${id}` : '#historial-ingresos',
+        ruta: '/ingresos'
+      }));
+    });
   }
 
   private obtenerResultado(texto: string): ResultadoBusqueda {
